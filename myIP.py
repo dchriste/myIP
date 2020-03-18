@@ -6,6 +6,7 @@ from socket import gethostname
 from socket import gethostbyname
 import os.path
 import inspect
+import argparse
 
 class ipCheck:
 
@@ -15,7 +16,12 @@ class ipCheck:
         self.ip = latestList[1].strip()
         self.Dt = latestList[2].strip()
         self.Tm = latestList[3].strip()
-        
+
+parser = argparse.ArgumentParser(description='Logs the Hostname and IP of this host.')
+parser.add_argument('-p','--print',help='print the latest Host & IP',action='store_true')
+parser.add_argument('-v','--verbose',help='increases verbosity of print and errors',action='store_true')
+args = parser.parse_args()
+
 scriptFile = inspect.getframeinfo(inspect.currentframe()).filename
 scriptPath = os.path.dirname(os.path.abspath(scriptFile)) + '\\'
 todayStr = str(date.today().strftime('%m-%d-%y'))
@@ -35,7 +41,9 @@ try:
         headerStr = 'Hostname,IP Address,Date Checked,Time Checked\n' if isFirst else ''
         writeStr = hostName + ', ' + hostIP + ', ' + todayStr + ', ' + current_time + '\n'
         writeFile.write(headerStr + writeStr)
-    print('\n' + 'The IP of ' + hostName + ' was ' + hostIP + ' as of ' + todayStr + ' at ' + current_time + '\n')
+    
+    if args.print and not args.verbose:
+        print('\n' + 'The IP of ' + hostName + ' was ' + hostIP + ' as of ' + todayStr + ' at ' + current_time + '\n')
 
     hosts = []
     isFound = False
@@ -64,13 +72,19 @@ try:
         writeFile.write('Hostname,IP Address,Date Checked,Time Checked\n')
         sorter = lambda item : item.hostname
         hosts.sort(key=sorter)
+        if args.print and args.verbose: print('\n')
 
         for hst in hosts:
+            if args.print and args.verbose: 
+                note =  ' *[this host]' if hst.hostname == hostName else ''
+                print(hst.hostname + ": " + hst.ip + " as of " + hst.Dt + " at " + hst.Tm + str(note))
             writeStr = hst.hostname + ', ' + hst.ip + ', ' + hst.Dt + ', ' + hst.Tm + '\n'
             writeFile.write(writeStr)
+        
+        if args.print and args.verbose: print('\n')
 
 except Exception as e:
-    print('An error occurred during host and IP retrieval: \nError Message is \"' + str(e)) + '\"\n'
+    if args.print or args.verbose: print('An error occurred during host and IP retrieval: \nError Message is \"' + str(e)) + '\"\n'
     with open(errLog, 'a+') as errFile:
         current_time = str(datetime.now().strftime("%H:%M:%S"))
         errFile.write('At ' + current_time + ', during host and IP retrieval, the script returned the following error: ' + str(e) + '\n')
