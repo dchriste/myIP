@@ -18,13 +18,16 @@ class ipCheck:
         self.Tm = latestList[3].strip()
 
 parser = argparse.ArgumentParser(description='Logs the Hostname and IP of this host.')
-parser.add_argument('-p','--print',help='print the latest Host & IP',action='store_true')
+group = parser.add_mutually_exclusive_group()
+group.add_argument('-l','--list',help='list all machines\' latest IPs',action='store_true')
+group.add_argument('-p','--print',help='print the latest Host & IP',action='store_true')
 parser.add_argument('-v','--verbose',help='increases verbosity of print and errors',action='store_true')
 args = parser.parse_args()
 
 scriptFile = inspect.getframeinfo(inspect.currentframe()).filename
 scriptPath = os.path.dirname(os.path.abspath(scriptFile)) + '\\'
 todayStr = str(date.today().strftime('%m-%d-%y'))
+current_time = str(datetime.now().strftime("%H:%M:%S"))
 errLog = scriptPath + todayStr + '_myIPerror.log'
 latestIPs = scriptPath + 'latestIPs.csv'
 isFirst = True
@@ -36,14 +39,14 @@ try:
     myHostsFile = scriptPath + hostName + '.csv'
     if os.path.exists(myHostsFile): isFirst = False
     
-    with open(myHostsFile,mode='a+') as writeFile:
-        current_time = str(datetime.now().strftime("%H:%M:%S"))
-        headerStr = 'Hostname,IP Address,Date Checked,Time Checked\n' if isFirst else ''
-        writeStr = hostName + ', ' + hostIP + ', ' + todayStr + ', ' + current_time + '\n'
-        writeFile.write(headerStr + writeStr)
-    
-    if args.print and not args.verbose:
-        print('\n' + 'The IP of ' + hostName + ' was ' + hostIP + ' as of ' + todayStr + ' at ' + current_time + '\n')
+    if not args.list:
+        with open(myHostsFile,mode='a+') as writeFile:            
+            headerStr = 'Hostname,IP Address,Date Checked,Time Checked\n' if isFirst else ''
+            writeStr = hostName + ', ' + hostIP + ', ' + todayStr + ', ' + current_time + '\n'
+            writeFile.write(headerStr + writeStr)
+        
+        if args.print and not args.verbose:
+            print('\n' + 'The IP of ' + hostName + ' was ' + hostIP + ' as of ' + todayStr + ' at ' + current_time + '\n')
 
     hosts = []
     isFound = False
@@ -68,20 +71,24 @@ try:
         host = ipCheck(writeStr)
         hosts.append(host)
 
-    with open(latestIPs,mode='w+') as writeFile:
-        writeFile.write('Hostname,IP Address,Date Checked,Time Checked\n')
-        sorter = lambda item : item.hostname
-        hosts.sort(key=sorter)
-        if args.print and args.verbose: print('\n')
+    sorter = lambda item : item.hostname
+    hosts.sort(key=sorter)
+    if (args.print and args.verbose) or args.list: print('\n',end='')
 
-        for hst in hosts:
-            if args.print and args.verbose: 
-                note =  ' *[this host]' if hst.hostname == hostName else ''
-                print(hst.hostname + ": " + hst.ip + " as of " + hst.Dt + " at " + hst.Tm + str(note))
-            writeStr = hst.hostname + ', ' + hst.ip + ', ' + hst.Dt + ', ' + hst.Tm + '\n'
-            writeFile.write(writeStr)
+    for hst in hosts:
+        #deal with printing if requested
+        if (args.print and args.verbose) or args.list: 
+            note =  ' *[this host]' if hst.hostname == hostName else ''
+            print(hst.hostname + ": " + hst.ip + " as of " + hst.Dt + " at " + hst.Tm + str(note))
         
-        if args.print and args.verbose: print('\n')
+        #deal with files if not listing
+        if not args.list:
+            with open(latestIPs,mode='w+') as writeFile:
+                writeFile.write('Hostname,IP Address,Date Checked,Time Checked\n')
+                writeStr = hst.hostname + ', ' + hst.ip + ', ' + hst.Dt + ', ' + hst.Tm + '\n'
+                writeFile.write(writeStr)
+
+    if (args.print and args.verbose) or args.list: print('\n',end='')
 
 except Exception as e:
     if args.print or args.verbose: print('An error occurred during host and IP retrieval: \nError Message is \"' + str(e)) + '\"\n'
