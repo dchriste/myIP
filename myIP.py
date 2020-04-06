@@ -40,7 +40,7 @@ try:
     if os.path.exists(myHostsFile): isFirst = False
     
     if not args.list:
-        with open(myHostsFile,mode='a+') as writeFile:            
+        with open(myHostsFile,mode='a+',encoding='utf-8') as writeFile:            
             headerStr = 'Hostname,IP Address,Date Checked,Time Checked\n' if isFirst else ''
             writeStr = hostName + ', ' + hostIP + ', ' + todayStr + ', ' + current_time + '\n'
             writeFile.write(headerStr + writeStr)
@@ -53,7 +53,7 @@ try:
 
     if os.path.exists(latestIPs):
         #read the contents of the file, modifying only pertinent data (in place)
-        with open(latestIPs, mode='r') as readFile:
+        with open(latestIPs, mode='r',encoding='utf-8') as readFile:
             Unused = readFile.readline() #read headers to keep them out of loop
 
             for line in readFile:
@@ -83,7 +83,7 @@ try:
         
         #deal with files if not listing
         if not args.list:
-            with open(latestIPs,mode='w+') as writeFile:
+            with open(latestIPs,mode='w+',encoding='utf-8') as writeFile:
                 writeFile.write('Hostname,IP Address,Date Checked,Time Checked\n')
                 writeStr = hst.hostname + ', ' + hst.ip + ', ' + hst.Dt + ', ' + hst.Tm + '\n'
                 writeFile.write(writeStr)
