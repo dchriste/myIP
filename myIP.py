@@ -39,10 +39,11 @@ try:
     myHostsFile = scriptPath + hostName + '.csv'
     if os.path.exists(myHostsFile): isFirst = False
     
+    writeStr = hostName + ', ' + hostIP + ', ' + todayStr + ', ' + current_time + '\n'
+
     if not args.list:
         with open(myHostsFile,mode='a+',encoding='utf-8') as writeFile:            
-            headerStr = 'Hostname,IP Address,Date Checked,Time Checked\n' if isFirst else ''
-            writeStr = hostName + ', ' + hostIP + ', ' + todayStr + ', ' + current_time + '\n'
+            headerStr = 'Hostname,IP Address,Date Checked,Time Checked\n' if isFirst else ''            
             writeFile.write(headerStr + writeStr)
         
         if args.print and not args.verbose:
@@ -75,6 +76,8 @@ try:
     hosts.sort(key=sorter)
     if (args.print and args.verbose) or args.list: print('\n',end='')
 
+    isFirst = True
+
     for hst in hosts:
         #deal with printing if requested
         if (args.print and args.verbose) or args.list: 
@@ -83,10 +86,12 @@ try:
         
         #deal with files if not listing
         if not args.list:
-            with open(latestIPs,mode='w+',encoding='utf-8') as writeFile:
-                writeFile.write('Hostname,IP Address,Date Checked,Time Checked\n')
+            if isFirst and os.path.exists(latestIPs): os.remove(latestIPs)
+            with open(latestIPs,mode='a+',encoding='utf-8') as writeFile:
+                headerStr = 'Hostname,IP Address,Date Checked,Time Checked\n' if isFirst else ''
+                isFirst = False
                 writeStr = hst.hostname + ', ' + hst.ip + ', ' + hst.Dt + ', ' + hst.Tm + '\n'
-                writeFile.write(writeStr)
+                writeFile.write(headerStr + writeStr)
 
     if (args.print and args.verbose) or args.list: print('\n',end='')
 
