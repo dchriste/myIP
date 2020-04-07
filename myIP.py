@@ -7,6 +7,7 @@ from socket import gethostbyname
 import os.path
 import inspect
 import argparse
+import sys
 
 class ipCheck:
 
@@ -25,7 +26,7 @@ parser.add_argument('-v','--verbose',help='increases verbosity of print and erro
 args = parser.parse_args()
 
 scriptFile = inspect.getframeinfo(inspect.currentframe()).filename
-scriptPath = os.path.dirname(os.path.abspath(scriptFile)) + '\\'
+scriptPath = os.path.abspath(os.path.dirname(sys.argv[0])) + '\\'
 todayStr = str(date.today().strftime('%m-%d-%y'))
 current_time = str(datetime.now().strftime("%H:%M:%S"))
 errLog = scriptPath + todayStr + '_myIPerror.log'
