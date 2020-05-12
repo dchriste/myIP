@@ -29,18 +29,18 @@ scriptFile = inspect.getframeinfo(inspect.currentframe()).filename
 scriptPath = os.path.abspath(os.path.dirname(sys.argv[0])) + '\\'
 todayStr = str(date.today().strftime('%m-%d-%y'))
 current_time = str(datetime.now().strftime("%H:%M:%S"))
-errLog = scriptPath + todayStr + '_myIPerror.log'
-latestIPs = scriptPath + 'latestIPs.csv'
+errLog = '{path}{dir}_myIPerror.log'.format(path=scriptPath,dir=todayStr)
+latestIPs = '{path}latestIPs.csv'.format(path=scriptPath)
 isFirst = True
 
 try:
     
     hostName = gethostname()
     hostIP = gethostbyname(hostName)    
-    myHostsFile = scriptPath + hostName + '.csv'
+    myHostsFile = '{path}{hostname}.csv'.format(path=scriptPath,hostname=hostName)
     if os.path.exists(myHostsFile): isFirst = False
     
-    writeStr = hostName + ', ' + hostIP + ', ' + todayStr + ', ' + current_time + '\n'
+    writeStr = '{host},{ip},{day},{time}\n'.format(host=hostName,ip=hostIP,day=todayStr,time=current_time)
 
     if not args.list:
         with open(myHostsFile,mode='a+',encoding='utf-8') as writeFile:            
@@ -48,7 +48,7 @@ try:
             writeFile.write(headerStr + writeStr)
         
         if args.print and not args.verbose:
-            print('\n' + 'The IP of ' + hostName + ' was ' + hostIP + ' as of ' + todayStr + ' at ' + current_time + '\n')
+            print('\n' + 'The IP of {host} was {ip} as of {day} at {time}\n'.format(host=hostName,ip=hostIP,day=todayStr,time=current_time))
 
     hosts = []
     isFound = False
@@ -83,7 +83,7 @@ try:
         #deal with printing if requested
         if (args.print and args.verbose) or args.list: 
             note =  ' *[this host]' if hst.hostname == hostName else ''
-            print(hst.hostname + ": " + hst.ip + " as of " + hst.Dt + " at " + hst.Tm + str(note))
+            print('{0.hostname}: {0.ip} as of {0.Dt} at {0.Tm}{note}'.format(hst,note=note))
         
         #deal with files if not listing
         if not args.list:
@@ -91,14 +91,13 @@ try:
             with open(latestIPs,mode='a+',encoding='utf-8') as writeFile:
                 headerStr = 'Hostname,IP Address,Date Checked,Time Checked\n' if isFirst else ''
                 isFirst = False
-                writeStr = hst.hostname + ', ' + hst.ip + ', ' + hst.Dt + ', ' + hst.Tm + '\n'
+                writeStr = '{0.hostname},{0.ip},{0.Dt},{0.Tm}\n'.format(hst)
                 writeFile.write(headerStr + writeStr)
 
     if (args.print and args.verbose) or args.list: print('\n',end='')
 
 except Exception as e:
-    if args.print or args.verbose: print('An error occurred during host and IP retrieval: \nError Message is \"' + str(e)) + '\"\n'
+    if args.print or args.verbose: print('An error occurred during host and IP retrieval: \nError Message is \"{error}\"\n'.format(error=e))
     with open(errLog, 'a+') as errFile:
         current_time = str(datetime.now().strftime("%H:%M:%S"))
-        errFile.write('At ' + current_time + ', during host and IP retrieval, the script returned the following error: ' + str(e) + '\n')
-
+        errFile.write('At {time}, during host and IP retrieval, the script returned the following error: {error}\n'.format(time=current_time,error=e))
